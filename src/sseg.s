@@ -28,13 +28,17 @@ ldr r4, =GPIOC_ODR
 
 loop:
 
+ldr r5, =0 // status reg for whether or not to skip a digit
+
 ldr r0, =ssegdata    // r0 = address of segment LUT
 ldr r1, =iseven      // r1 = address of even/odd LUT
 ldrb r0, [r0, r2]    // r0 = segment pattern for digit r2
 ldrb r1, [r1, r2]    // r1 = 1 if digit r2 is even
 
-cmp r1, #1           // should I display this digit?
-bne increment        // odd: skip display and delay
+add r5, r1           // if the LUT says 1, the number COULD be skipped
+add r5, #0           // simulate button press, needs to be a UBFX
+cmp r5, #2           // two conditions must be met to skip
+beq increment        // odd: skip display and delay
 
 str r0, [r4]         // even: output to hardware
 nop                  // put a breakpoint here
@@ -68,11 +72,11 @@ ssegdata:   // The LUT
     .byte 0x06  // 1
 
 iseven:    // wake up babe new LUT just dropped
-    .byte 0x01  // C
-    .byte 0x00  // 3
-    .byte 0x00  // 5
-    .byte 0x00  // 1
-    .byte 0x00  // 7
-    .byte 0x00  // 1
-    .byte 0x01  // 6
-    .byte 0x00  // 1
+    .byte 0x00  // C
+    .byte 0x01  // 3
+    .byte 0x01  // 5
+    .byte 0x01  // 1
+    .byte 0x01  // 7
+    .byte 0x01  // 1
+    .byte 0x00  // 6
+    .byte 0x01  // 1
