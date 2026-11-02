@@ -1,0 +1,42 @@
+{
+  "name": "sseg-viewer",
+  "displayName": "7-Segment GPIO Viewer",
+  "description": "Shows a virtual 7-segment display driven by a GPIO register whenever the debugger halts.",
+  "version": "0.1.0",
+  "publisher": "local",
+  "license": "MIT",
+  "engines": { "vscode": "^1.75.0" },
+  "main": "./extension.js",
+  "activationEvents": ["onDebug", "onCommand:ssegViewer.show"],
+  "contributes": {
+    "commands": [
+      { "command": "ssegViewer.show", "title": "Show 7-Segment Viewer", "category": "7-Seg" },
+      { "command": "ssegViewer.refresh", "title": "Refresh 7-Segment Viewer", "category": "7-Seg" }
+    ],
+    "configuration": {
+      "title": "7-Segment Viewer",
+      "properties": {
+        "ssegViewer.address": {
+          "type": "string",
+          "default": "0x40020814",
+          "description": "Register to read (default GPIOC_ODR on STM32F407)."
+        },
+        "ssegViewer.bitOffset": {
+          "type": "integer",
+          "default": 0,
+          "description": "Bit of the register wired to segment a. Segments a,b,c,d,e,f,g,dp use the next 8 bits."
+        },
+        "ssegViewer.activeLow": {
+          "type": "boolean",
+          "default": false,
+          "description": "Set for a common-anode display, where a 0 bit lights the segment."
+        },
+        "ssegViewer.autoOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "Open the viewer automatically when a debug session starts."
+        }
+      }
+    }
+  }
+}

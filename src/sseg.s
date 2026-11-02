@@ -1,14 +1,16 @@
   .syntax unified
-  .cpu cortex-m3
+  .cpu cortex-m4
   .thumb
   .global asm_main
   .type asm_main, %function
 
-.equ	GPIOC_ODR,	0x4001100C	// For 7-seg on pins 0 to 7
-.equ	GPIOA_ODR,	0x4001080C	// For Nucleo LED on pin 5
-.equ	GPIOA_IDR,	0x40010808	// For custom buttons on pins 8-11
-.equ	GPIOB_ODR,	0x40010C0C	// For Nucleo button on pin 13
-.equ	DELAY_COUNT,	2666667		// ~1 s at 8 MHz
+// STM32F407 GPIO: base GPIOA 0x40020000, GPIOB 0x40020400, GPIOC 0x40020800
+// IDR offset 0x10, ODR offset 0x14
+.equ	GPIOC_ODR,	0x40020814	// For 7-seg on pins 0 to 7
+.equ	GPIOA_ODR,	0x40020014	// For LED on pin 5
+.equ	GPIOA_IDR,	0x40020010	// For custom buttons on pins 8-11
+.equ	GPIOB_IDR,	0x40020410	// For button on pin 13
+.equ	DELAY_COUNT,	5333333		// ~1 s at 16 MHz HSI (3 cycles/iteration)
 
 // Hardware configuration summary:
 // 	Nucleo LED on PA5
