@@ -24,17 +24,23 @@ asm_main:
 
 ldr r2, =0 // counter from 0 -> 8
 ldr r3, =8 // end value
-ldr r1, =GPIOC_ODR
+ldr r4, =GPIOC_ODR
 
 loop:
 
-ldr r0, =ssegdata    // r0 = address of LUT
-ldrb r0, [r0, r2]    // r0 = first byte of LUT (0x39 = 'C')
+ldr r0, =ssegdata    // r0 = address of segment LUT
+ldr r1, =iseven      // r1 = address of even/odd LUT
+ldrb r0, [r0, r2]    // r0 = segment pattern for digit r2
+ldrb r1, [r1, r2]    // r1 = 1 if digit r2 is even
 
-str r0, [r1]         // output to hardware
+cmp r1, #1           // should I display this digit?
+bne increment        // odd: skip display and delay
 
+str r0, [r4]         // even: output to hardware
+nop                  // put a breakpoint here
 bl delay_1s
 
+increment:
 add r2, r2, #1       // increment counter
 cmp r2, r3
 beq end
@@ -60,3 +66,13 @@ ssegdata:   // The LUT
     .byte 0x06  // 1
     .byte 0x7D  // 6
     .byte 0x06  // 1
+
+iseven:    // wake up babe new LUT just dropped
+    .byte 0x01  // C
+    .byte 0x00  // 3
+    .byte 0x00  // 5
+    .byte 0x00  // 1
+    .byte 0x00  // 7
+    .byte 0x00  // 1
+    .byte 0x01  // 6
+    .byte 0x00  // 1
