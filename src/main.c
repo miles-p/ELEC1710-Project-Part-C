@@ -1,30 +1,34 @@
-#include "stm32f1xx.h"
+#include "stm32f4xx.h"
 
-extern void asm_main(void);   // defined in main.s, never returns
+extern void asm_main(void); // defined in sseg.s, never returns
 
 int main(void)
 {
-    // Enable clocks for GPIOA, GPIOB, GPIOC
-    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPCEN;
+    // Enable clocks for GPIOA, GPIOB, GPIOC (F4: GPIO on AHB1)
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN;
 
-    // Each pin = 4 bits in CRL (pins 0-7) / CRH (pins 8-15)
-    //   0x2 = push-pull output, 2 MHz
-    //   0x4 = floating input
-    //   0x8 = input with pull-up/pull-down (select via ODR)
+    // F4 GPIO: MODER has 2 bits per pin
+    //   00 = input, 01 = output, 10 = alternate function, 11 = analog
+    // PUPDR has 2 bits per pin: 00 = none, 01 = pull-up, 10 = pull-down
+    // Masked writes only: PA13/PA14 are SWD and must stay as alternate function.
 
-    // PC0-PC7: 7-segment outputs
-    GPIOC->CRL = 0x22222222;
+    // PC0-PC7: 7-segment outputs (push-pull)
+    GPIOC->MODER = (GPIOC->MODER & ~0xFFFFu) | 0x5555u;
 
-    // PA5: Nucleo LED output
-    GPIOA->CRL = (GPIOA->CRL & ~(0xFu << 20)) | (0x2u << 20);
+    // PA5: LED output
+    GPIOA->MODER = (GPIOA->MODER & ~(0x3u << 10)) | (0x1u << 10);
 
     // PA8-PA11: tactile switches, floating inputs
-    GPIOA->CRH = (GPIOA->CRH & ~0xFFFFu) | 0x4444u;
+    GPIOA->MODER &= ~(0xFFu << 16);
+    GPIOA->PUPDR &= ~(0xFFu << 16);
 
-    // PB13: Nucleo button, floating input
-    GPIOB->CRH = (GPIOB->CRH & ~(0xFu << 20)) | (0x4u << 20);
+    // PB13: button, floating input
+    GPIOB->MODER &= ~(0x3u << 26);
+    GPIOB->PUPDR &= ~(0x3u << 26);
 
     asm_main();
 
-    while (1) { }   // not reached
+    while (1)
+    {
+    } // not reached
 }
