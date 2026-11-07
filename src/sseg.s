@@ -36,7 +36,14 @@ ldrb r0, [r0, r2]    // r0 = segment pattern for digit r2
 ldrb r1, [r1, r2]    // r1 = 1 if digit r2 is even
 
 add r5, r1           // if the LUT says 1, the number COULD be skipped
-add r5, #0           // simulate button press, needs to be a UBFX
+
+
+//add r5, #0           // simulate button press, needs to be a UBFX
+ldr r6, =GPIOA_IDR
+ldr r6, [r6]
+ubfx r6, r6, #8, #1  // read PA8 into r6
+add r5, r6
+
 cmp r5, #2           // two conditions must be met to skip
 beq increment        // odd: skip display and delay
 

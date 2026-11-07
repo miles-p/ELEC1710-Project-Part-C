@@ -18,9 +18,9 @@ int main(void)
     // PA5: LED output
     GPIOA->MODER = (GPIOA->MODER & ~(0x3u << 10)) | (0x1u << 10);
 
-    // PA8-PA11: tactile switches, floating inputs
+    // PA8-PA11: tactile switches, inputs with internal pull-ups (pressed reads 0)
     GPIOA->MODER &= ~(0xFFu << 16);
-    GPIOA->PUPDR &= ~(0xFFu << 16);
+    GPIOA->PUPDR = (GPIOA->PUPDR & ~(0xFFu << 16)) | (0x55u << 16);
 
     // PB13: button, floating input
     GPIOB->MODER &= ~(0x3u << 26);
