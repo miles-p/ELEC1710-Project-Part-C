@@ -42,6 +42,7 @@ add r5, r1           // if the LUT says 1, the number COULD be skipped
 ldr r6, =GPIOA_IDR
 ldr r6, [r6]
 ubfx r6, r6, #8, #1  // read PA8 into r6
+eor r6, #1           // active low: pressed (0) -> 1, released (1) -> 0
 add r5, r6
 
 cmp r5, #2           // two conditions must be met to skip
