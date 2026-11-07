@@ -1,3 +1,4 @@
+// 492 bytes :)
   .syntax unified
   .cpu cortex-m4
   .thumb
@@ -10,18 +11,14 @@
 .equ	GPIOA_ODR,	0x40020014	// For LED on pin 5
 .equ	GPIOA_IDR,	0x40020010	// For custom buttons on pins 8-11
 .equ	GPIOB_IDR,	0x40020410	// For button on pin 13
-.equ	DELAY_COUNT,	5333333		// ~1 s at 16 MHz HSI (3 cycles/iteration)
+.equ	DELAY_COUNT,	  53333		// 10ms at 16 MHz HSI (3 cycles/iteration)
 
-// Hardware configuration summary:
-// 	Nucleo LED on PA5
-// 	Nucleo button on PB13
-// 	4x tactile switches on PA8 to PA11
-// 	7-segment on PC0 to PC7
-
-// GPIO setup is done in main.c before asm_main is called
 
 asm_main:
 
+ldr r9, =0 // last clock state (only set once, so a held button can't re-trigger on wrap)
+
+restart:
 ldr r2, =0 // counter from 0 -> 8
 ldr r3, =8 // end value
 ldr r4, =GPIOC_ODR
@@ -49,8 +46,19 @@ cmp r5, #2           // two conditions must be met to skip
 beq increment        // odd: skip display and delay
 
 str r0, [r4]         // even: output to hardware
-nop                  // put a breakpoint here
-bl delay_1s
+
+wait:
+// current clock input
+ldr r8, =GPIOA_IDR
+ldr r8, [r8]
+ubfx r8, r8, #13, #1  // read PA13 into r8
+eor r8, #1           // active low: pressed (0) -> 1, released (1) -> 0
+cmp r8, r9
+beq wait             // no change: keep waiting
+mov r9, r8           // remember the new state
+bl delay_10ms
+cmp r8, #1
+bne wait             // that was a release: keep waiting
 
 increment:
 add r2, r2, #1       // increment counter
@@ -60,9 +68,9 @@ beq end
 b     loop           // repeat forever (skip setup)
 
 end:
-b asm_main
+b restart
 
-delay_1s:
+delay_10ms:
     ldr  r7, =DELAY_COUNT
 1:  subs r7, r7, #1
     bne  1b
