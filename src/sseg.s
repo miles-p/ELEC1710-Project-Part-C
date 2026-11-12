@@ -1,22 +1,20 @@
-// 492 bytes :)
+// 456 bytes (includes some C bloat)
   .syntax unified
-  .cpu cortex-m4
+  .cpu cortex-m3
   .thumb
   .global asm_main
   .type asm_main, %function
 
-// STM32F407 GPIO: base GPIOA 0x40020000, GPIOB 0x40020400, GPIOC 0x40020800
-// IDR offset 0x10, ODR offset 0x14
-.equ	GPIOC_ODR,	0x40020814	// For 7-seg on pins 0 to 7
-.equ	GPIOA_ODR,	0x40020014	// For LED on pin 5
-.equ	GPIOA_IDR,	0x40020010	// For custom buttons on pins 8-11
-.equ	GPIOB_IDR,	0x40020410	// For button on pin 13
-.equ	DELAY_COUNT,	  53333		// 10ms at 16 MHz HSI (3 cycles/iteration)
+// STM32F103 GPIO: base GPIOA 0x40010800, GPIOC 0x40011000
+// IDR offset 0x08, ODR offset 0x0C
+.equ	GPIOC_ODR,	0x4001100C	// For 7-seg on pins 0 to 7
+.equ	GPIOA_IDR,	0x40010808	// For buttons on PA8 (skip) and PA13 (clock)
+.equ	DELAY_COUNT,	  26667		// 10ms at 8 MHz HSI (3 cycles/iteration)
 
 
 asm_main:
 
-ldr r9, =0 // last clock state (only set once, so a held button can't re-trigger on wrap)
+ldr r9, =0 // last clock state
 
 restart:
 ldr r2, =0 // counter from 0 -> 8
@@ -28,7 +26,7 @@ loop:
 ldr r5, =0 // status reg for whether or not to skip a digit
 
 ldr r0, =ssegdata    // r0 = address of segment LUT
-ldr r1, =iseven      // r1 = address of even/odd LUT
+ldr r1, =isodd      // r1 = address of even/odd LUT
 ldrb r0, [r0, r2]    // r0 = segment pattern for digit r2
 ldrb r1, [r1, r2]    // r1 = 1 if digit r2 is even
 
@@ -39,7 +37,7 @@ add r5, r1           // if the LUT says 1, the number COULD be skipped
 ldr r6, =GPIOA_IDR
 ldr r6, [r6]
 ubfx r6, r6, #8, #1  // read PA8 into r6
-eor r6, #1           // active low: pressed (0) -> 1, released (1) -> 0
+//eor r6, #1           // active low: pressed (0) -> 1, released (1) -> 0
 add r5, r6
 
 cmp r5, #2           // two conditions must be met to skip
@@ -78,6 +76,7 @@ delay_10ms:
             
 .align 4
 ssegdata:   // The LUT
+/*
     .byte 0x39  // C
     .byte 0x4F  // 3
     .byte 0x6D  // 5
@@ -86,8 +85,19 @@ ssegdata:   // The LUT
     .byte 0x06  // 1
     .byte 0x7D  // 6
     .byte 0x06  // 1
+    */
 
-iseven:    // wake up babe new LUT just dropped
+    .byte 0x06
+    .byte 0x7D
+    .byte 0x06
+    .byte 0x07
+    .byte 0x06
+    .byte 0x6D
+    .byte 0x4F
+    .byte 0x39
+
+isodd:    // wake up babe new LUT just dropped
+/*
     .byte 0x00  // C
     .byte 0x01  // 3
     .byte 0x01  // 5
@@ -96,3 +106,13 @@ iseven:    // wake up babe new LUT just dropped
     .byte 0x01  // 1
     .byte 0x00  // 6
     .byte 0x01  // 1
+    */
+
+    .byte 0x01
+    .byte 0x00
+    .byte 0x01
+    .byte 0x01
+    .byte 0x01
+    .byte 0x01
+    .byte 0x01
+    .byte 0x00
